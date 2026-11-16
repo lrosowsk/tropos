@@ -245,7 +245,7 @@
     { id: "monthly", name: "Monthly",           months: 1,  off: 0.15, note: "Billed monthly. Skip or cancel any time.",
       pitch: "Flexible, but every month is a new chance to skip. A paused box is usually where the habit breaks." },
     { id: "3",       name: "3 months upfront",  months: 3,  off: 0.20, note: "Billed every 3 months. Shipped monthly.",
-      pitch: "12 weeks matches the length of most supplement studies. Enough time to actually see what your bundle does for you." },
+      pitch: "12 weeks matches the length of most supplement studies. Enough time to actually see what your stack does for you." },
     { id: "12",      name: "12 months upfront", months: 12, off: 0.40, note: "Billed yearly. Shipped monthly. Best value.",
       pitch: "Decide once and stop thinking about it. A full year of consistency at your lowest price, locked in." },
   ];
@@ -306,7 +306,7 @@
 
   function addToCart(type, id, { sub = true, qty = 1, silent = false, items, doses, plan } = {}) {
     reserveView = null;
-    if (type === "bundle") cart = cart.filter(l => l.type !== "bundle"); // one personal bundle at a time
+    if (type === "bundle") cart = cart.filter(l => l.type !== "bundle"); // one personal stack at a time
     plan = plan || (sub ? "monthly" : "once");
     const existing = type !== "bundle" && cart.find(l => l.type === type && l.id === id && planOf(l) === plan);
     if (existing) existing.qty += qty;
@@ -315,7 +315,7 @@
     renderCart();
     const c = $("#cartCount");
     c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump");
-    if (!silent) toast(`${type === "product" ? P[id].name : "Your bundle"} added · ${PLAN[plan].name}`);
+    if (!silent) toast(`${type === "product" ? P[id].name : "Your stack"} added · ${PLAN[plan].name}`);
   }
 
   const cartBundle = () => cart.find(l => l.type === "bundle");
@@ -324,7 +324,7 @@
     if (!b) return addToCart("bundle", "personal", { items: [id], plan: "monthly" });
     if (!b.items.includes(id)) { b.items.push(id); (b.doses ||= {})[id] = recDose(id, lastAnswers); }
     save(); renderCart();
-    toast(`${P[id].name} added to your bundle`);
+    toast(`${P[id].name} added to your stack`);
   }
 
   let reserveView = null, reserveName = "";   // null | "form" | "done"
@@ -340,7 +340,7 @@
       const plan = PLAN[planOf(l)].name;
       if (l.type === "product") return `${P[l.id].name} x${l.qty} (${plan})`;
       const items = l.items.map(i => `${P[i].name} ${DOSES[i].levels[doseIdx(i, (l.doses || {})[i])][0]}`).join(", ");
-      return `Bundle x${l.qty} (${plan}): ${items}`;
+      return `Stack x${l.qty} (${plan}): ${items}`;
     }).join(" | ");
   }
 
@@ -376,7 +376,7 @@
           <p>Your order is reserved at today's price. We'll email you before anything ships, and you won't be charged until you confirm.</p>
           <a href="#quiz" class="reserve-back" data-close>Back to the site</a></div>`;
       } else {
-        body.innerHTML = `<div class="empty"><h4>Your cart is empty</h4><p>Not sure where to start? The 10-question survey builds your bundle for you.</p><a href="#quiz" class="btn btn-primary btn-sm" data-close>Take the survey</a></div>`;
+        body.innerHTML = `<div class="empty"><h4>Your cart is empty</h4><p>Not sure where to start? The 10-question survey builds your stack for you.</p><a href="#quiz" class="btn btn-primary btn-sm" data-close>Take the survey</a></div>`;
       }
       $("#cartFoot").innerHTML = "";
       return;
@@ -384,13 +384,13 @@
 
     body.innerHTML = cart.map(l => {
       const isP = l.type === "product";
-      const item = isP ? P[l.id] : { name: "Your Tropos bundle", items: l.items };
+      const item = isP ? P[l.id] : { name: "Your Tropos stack", items: l.items };
       const pr = linePricing(l);
       const others = isP ? [] : PRODUCTS.filter(p => !l.items.includes(p.id));
       const sub = isP ? `${esc(item.kind)} · ${item.servings}-day supply`
         : `${l.items.length} product${l.items.length > 1 ? "s" : ""}`;
       const bundleEdit = isP ? "" : `<ul class="bundle-items">${l.items.map(i => `<li><span>${esc(P[i].name)}</span>${doseSeg(i, doseIdx(i, (l.doses || {})[i]), recDose(i, lastAnswers), `data-act="bundle-dose" data-id="${i}"`)}<span class="bi-price">${money2(P[i].price * doseMult(i, (l.doses || {})[i]))}</span><button data-act="bundle-remove" data-id="${i}" aria-label="Remove ${esc(P[i].name)} from bundle">✕</button></li>`).join("")}</ul>
-          ${others.length ? `<label class="bundle-add">+ <select data-act="bundle-add" aria-label="Add a product to your bundle"><option value="">Add a product to your bundle</option>${others.map(p => `<option value="${p.id}">${esc(p.name)} · ${esc(p.kind)} · ${money(p.price)}</option>`).join("")}</select></label>` : ""}`;
+          ${others.length ? `<label class="bundle-add">+ <select data-act="bundle-add" aria-label="Add a product to your stack"><option value="">Add a product to your stack</option>${others.map(p => `<option value="${p.id}">${esc(p.name)} · ${esc(p.kind)} · ${money(p.price)}</option>`).join("")}</select></label>` : ""}`;
       const lineIds = isP ? [l.id] : l.items, lineDoses = isP ? {} : (l.doses || {});
       return `<div class="line" data-key="${l.key}">
         <div>
@@ -433,7 +433,7 @@
         <form id="reserveForm" class="reserve" novalidate>
           <p class="reserve-lead"><strong>No payment today.</strong> Tropos is launching soon. Reserve this order at today's price and we'll email you before anything ships.</p>
           <label>First name<input name="name" autocomplete="given-name" maxlength="40" value="${esc(firstName())}"></label>
-          <label>Email<input name="email" type="email" required autocomplete="email" maxlength="120" placeholder="you@example.com"></label>
+          <label>Email<input name="email" type="email" required autocomplete="email" maxlength="120" placeholder="you@example.com" value="${esc(gateEmail)}"></label>
           <p class="reserve-error" aria-live="polite"></p>
           <button class="btn btn-primary btn-block" type="submit">Reserve my order</button>
           <button type="button" class="reserve-back" data-reserve-back>← Back to cart</button>
@@ -603,8 +603,8 @@
           <div class="pd-badges">${p.free.map(f => `<span>${esc(f)}</span>`).join("")}</div>
           <ul class="pd-benefits">${p.benefits.map(b => `<li>${esc(b)}</li>`).join("")}</ul>
           <div class="buy-opts" role="radiogroup" aria-label="Purchase option">
-            ${bundle && !inBundle ? `<button class="buy-opt on" data-buy="bundle" role="radio" aria-checked="true"><span><strong>Add to my bundle</strong><small>Joins your bundle on its ${esc(bq.plan.name.toLowerCase())} plan</small></span><span class="p">${bq.planDisc ? `<s>${money(p.price)}</s>` : ""}${money2(bq.perMonth)}${bq.plan.id === "once" ? "" : "/mo"}</span></button>` : ""}
-            ${inBundle ? `<p class="in-bundle">✓ Already in your bundle</p>` : ""}
+            ${bundle && !inBundle ? `<button class="buy-opt on" data-buy="bundle" role="radio" aria-checked="true"><span><strong>Add to my stack</strong><small>Joins your stack on its ${esc(bq.plan.name.toLowerCase())} plan</small></span><span class="p">${bq.planDisc ? `<s>${money(p.price)}</s>` : ""}${money2(bq.perMonth)}${bq.plan.id === "once" ? "" : "/mo"}</span></button>` : ""}
+            ${inBundle ? `<p class="in-bundle">✓ Already in your stack</p>` : ""}
             ${SUB_PLANS.map(pl => { const q = quote([id], {}, pl.id); const on = modalMode === pl.id;
               return `<button class="buy-opt ${on ? "on" : ""}" data-buy="${pl.id}" role="radio" aria-checked="${on}"><span><strong>${pl.name}${pl.off ? ` · save ${Math.round(pl.off * 100)}%` : ""}</strong><small>${pl.months > 1 ? `${money2(q.today)} today · ` : ""}${esc(pl.note)}</small></span><span class="p">${pl.off ? `<s>${money(p.price)}</s>` : ""}${money2(q.perMonth)}${pl.id === "once" ? "" : "/mo"}</span></button>`; }).join("")}
             <button class="once-opt ${modalMode === "once" ? "on" : ""}" data-buy="once" role="radio" aria-checked="${modalMode === "once"}">Or buy once at full price, ${money2(p.price)}</button>
@@ -613,7 +613,7 @@
           <button class="btn btn-primary btn-block" id="modalAdd">Add to cart</button>
           <div class="pd-tabs">
             <details open><summary>Supplement facts</summary><div class="tab-body">${factsPanel(p)}</div></details>
-            <details><summary>How to take</summary><div class="tab-body"><p>${esc(p.take)}</p><p><strong>Typical daily range:</strong> ${esc(DOSES[p.id].range)}. You can set your dose per product in your bundle.</p>${p.caution ? `<div class="caution"><strong>Caution:</strong> ${esc(p.caution)}</div>` : ""}</div></details>
+            <details><summary>How to take</summary><div class="tab-body"><p>${esc(p.take)}</p><p><strong>Typical daily range:</strong> ${esc(DOSES[p.id].range)}. You can set your dose per product in your stack.</p>${p.caution ? `<div class="caution"><strong>Caution:</strong> ${esc(p.caution)}</div>` : ""}</div></details>
             <details><summary>Testing &amp; sourcing</summary><div class="tab-body"><p>Made in an NSF-certified, cGMP facility. Every batch is tested by an independent ISO 17025-accredited lab for identity, potency, microbes and heavy metals (lead, mercury, cadmium, arsenic).</p><p>Find the lot number on the bottom of your ${p.shape === "tub" ? "tub" : "bottle"} to see that batch's results.</p></div></details>
             ${pairs.length ? `<details><summary>Pairs well with</summary><div class="tab-body"><p>${pairs.map(x => `<a href="#" data-open="${x}" style="text-decoration:underline">${P[x].name}</a>`).join(", ")}</p></div></details>` : ""}
           </div>
@@ -649,7 +649,7 @@
 
   /* ───────────────────────── Quiz ───────────────────────── */
   const QUESTIONS = [
-    { name: "name", type: "text", section: "About you", optional: true, title: "First, what should we call you?", help: "Optional. Just so your bundle feels like yours.", placeholder: "First name" },
+    { name: "name", type: "text", section: "About you", optional: true, title: "First, what should we call you?", help: "Optional. Just so your stack feels like yours.", placeholder: "First name" },
     { name: "goals", type: "checkbox", section: "Goals", max: 3, title: "What are you working on{name}?", help: "Pick up to three. We'll prioritize in that order.", cols: 2, options: [
       ["strength", "Build strength & muscle", "Lifting, sport, getting stronger"],
       ["energy", "More daily energy", "Fewer afternoon slumps"],
@@ -718,7 +718,7 @@
         <p class="q-error" aria-live="polite"></p>
         <div class="q-nav">
           <button type="button" class="q-back" data-q="back" ${i === 0 ? "disabled" : ""}>← Back</button>
-          <button type="button" class="btn btn-primary" data-q="next">${i === QUESTIONS.length - 1 ? "Build my bundle" : "Continue"} <span aria-hidden="true">→</span></button>
+          <button type="button" class="btn btn-primary" data-q="next">${i === QUESTIONS.length - 1 ? "Build my stack" : "Continue"} <span aria-hidden="true">→</span></button>
         </div>
       </fieldset>`).join("");
     updateBar();
@@ -765,7 +765,7 @@
       $(".quiz-step.active .q-error", form).textContent = "Choose an option to continue.";
       return;
     }
-    if (dir > 0 && step === QUESTIONS.length - 1) { showResult(); return; }
+    if (dir > 0 && step === QUESTIONS.length - 1) { showGate(); return; }
     step = Math.max(0, Math.min(QUESTIONS.length - 1, step + dir));
     personalize();
     $$(".quiz-step", form).forEach((el, i) => el.classList.toggle("active", i === step));
@@ -787,7 +787,7 @@
     const add = (id, pts, why) => { (r[id] ||= { score: 0, why: [] }); r[id].score += pts; if (why) r[id].why.push(why); };
 
     // Foundation: everyone's baseline
-    add("foundation", 3 + 3 * w("essentials"), has("essentials") ? "you want to <b>cover nutritional gaps</b>" : "it's the <b>foundation</b> every bundle is built on");
+    add("foundation", 3 + 3 * w("essentials"), has("essentials") ? "you want to <b>cover nutritional gaps</b>" : "it's the <b>foundation</b> every stack is built on");
     if (ex.includes("indoors")) add("foundation", 2, "you're <b>mostly indoors</b>, so vitamin D matters more");
     if (diet === "vegan" || diet === "veg") add("foundation", 1, `B12 is hard to get on a <b>${diet === "vegan" ? "vegan" : "vegetarian"}</b> diet`);
     if (age === "40p") add("foundation", 1, "zinc and D3 needs rise <b>after 40</b>");
@@ -885,15 +885,40 @@
   let lastDoses = {};
   let lastPlan = "monthly";
   let lastAnswers = null;
+  /* Email gate: capture the lead before revealing the stack */
+  let gateEmail = "";
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  function currentAnswers() { return Object.fromEntries(QUESTIONS.map(q => [q.name, values(q.name)])); }
+  function showGate() {
+    const res = $("#quizResult"), n = firstName(), count = recommend(currentAnswers()).length;
+    $("#quizBar").style.width = "100%";
+    form.hidden = true; res.hidden = false;
+    res.innerHTML = `<div class="gate">
+      <p class="eyebrow">Your stack is ready</p>
+      <h3>${n ? `${esc(n)}, where` : "Where"} should we send it?</h3>
+      <p class="gate-lead">We've matched ${count} products and a starting dose for each to your 10 answers. Enter your email to see your stack and be first to know when Tropos launches.</p>
+      <form id="gateForm" class="gate-form" novalidate>
+        <label class="sr-only" for="gateEmail">Email address</label>
+        <input id="gateEmail" name="email" type="email" required autocomplete="email" maxlength="120" placeholder="you@example.com" value="${esc(gateEmail)}">
+        <button class="btn btn-primary" type="submit">Show my stack →</button>
+      </form>
+      <p class="gate-error" aria-live="polite"></p>
+      <p class="gate-fine">No spam. Just your stack and Tropos launch updates. Unsubscribe any time.</p>
+      <button class="q-back gate-back" data-gate-back>← Back to the questions</button>
+    </div>`;
+    $("#quiz").scrollIntoView({ behavior: "smooth", block: "start" });
+    const em = $("#gateEmail"); if (em) em.focus({ preventScroll: true });
+  }
+
   function showResult() {
     const res = $("#quizResult");
     $("#quizBar").style.width = "100%";
     form.hidden = true;
     res.hidden = false;
     const n = firstName();
-    const steps = ["Weighing your goals and training", "Checking diet, caffeine and medication fit", "Matching 9 products to your answers", "Applying your bundle pricing"];
+    const steps = ["Weighing your goals and training", "Checking diet, caffeine and medication fit", "Matching 9 products to your answers", "Applying your stack pricing"];
     res.innerHTML = `<div class="building"><div class="spinner" aria-hidden="true"></div>
-      <h3>Building ${n ? esc(n) + "'s" : "your"} bundle…</h3>
+      <h3>Building ${n ? esc(n) + "'s" : "your"} stack…</h3>
       <ul>${steps.map((t, i) => `<li style="animation-delay:${i * 0.35}s">${t}</li>`).join("")}</ul></div>`;
     $("#quiz").scrollIntoView({ behavior: "smooth", block: "start" });
     const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -910,9 +935,9 @@
     const goalText = goalNames.length > 1 ? goalNames.slice(0, -1).join(", ") + " and " + goalNames.slice(-1) : goalNames[0];
 
     const notes = [];
-    if (answers.extras.includes("meds")) notes.push("Because you take prescription medication, please check this bundle with your doctor before starting. Each product page lists its cautions.");
+    if (answers.extras.includes("meds")) notes.push("Because you take prescription medication, please check this stack with your doctor before starting. Each product page lists its cautions.");
     if (answers.diet[0] === "veg" || answers.diet[0] === "vegan") notes.push("Omega is made from fish oil, so we've left it out. A vegan algae omega-3 is coming soon.");
-    if (answers.diet[0] === "vegan") notes.push("Protein is whey (dairy), so it's not included in your bundle.");
+    if (answers.diet[0] === "vegan") notes.push("Protein is whey (dairy), so it's not included in your stack.");
     if (answers.extras.includes("caffeine")) notes.push("We've left out Focus since you're caffeine-sensitive.");
     if (lastPicks.includes("ashwagandha")) notes.push("Calm (ashwagandha) isn't suitable with thyroid medication or autoimmune conditions.");
 
@@ -927,12 +952,36 @@
     res.innerHTML = `
       <div class="result-head">
         <div>
-          <p class="eyebrow">${n ? esc(n) + "'s" : "Your"} personal bundle</p>
+          <p class="eyebrow">${n ? esc(n) + "'s" : "Your"} personal stack</p>
           <h3>${n ? esc(n) + ", here are" : "Here are"} ${picks.length} products for ${esc(goalText)}.</h3>
           <p class="profile">${profile.map(t => `<span>${esc(t)}</span>`).join("")}</p>
           <p>Ranked by how closely each matches your answers, with a starting dose set for you. Subscribe to save 15%, or pay upfront to save up to ${MAX_OFF}%.</p>
         </div>
         <button class="q-back" data-restart>↺ Retake survey</button>
+      </div>
+      <div class="why-sub">
+        <h4>Why get your stack from Tropos</h4>
+        <div class="vs">
+          <div class="vs-col">
+            <p class="vs-title">Piecing it together yourself</p>
+            <ul>
+              <li>${picks.length} products from different brands and checkouts</li>
+              <li>Standard serving sizes, not doses matched to you</li>
+              <li>Bottles run out at different times, so you skip days</li>
+              <li>Full price, every reorder</li>
+            </ul>
+          </div>
+          <div class="vs-col vs-us">
+            <p class="vs-title">Your Tropos stack</p>
+            <ul>
+              <li>Everything in one box, every month</li>
+              <li>Your exact doses, set from your answers</li>
+              <li>Refills arrive together, before you run out</li>
+              <li>Up to ${MAX_OFF}% off, a free pill organizer, free shipping over ${money(FREE_SHIP_MIN)}/mo</li>
+            </ul>
+          </div>
+        </div>
+        <p class="why-sub-foot"><strong>Consistency is what makes supplements work.</strong> Most are studied over 8–12 weeks of daily use. A subscription makes every one of those days automatic, and you can change doses, swap products or re-take the survey whenever your goals change.</p>
       </div>
       <div class="result-list">
         ${picks.map(x => {
@@ -953,8 +1002,8 @@
         }).join("")}
       </div>
       <div class="add-more">
-        <h4>Customize your bundle</h4>
-        <p>Add anything else you'd like. Your plan's savings apply to everything in your bundle. Doses start at what we'd recommend for you, and you can change them in your cart.</p>
+        <h4>Customize your stack</h4>
+        <p>Add anything else you'd like. Your plan's savings apply to everything in your stack. Doses start at what we'd recommend for you, and you can change them in your cart.</p>
         <div class="add-grid">
           ${PRODUCTS.filter(p => !lastPicks.includes(p.id)).map(p => {
             const warn = fitWarning(p.id, answers);
@@ -994,8 +1043,8 @@
     });
     const n = lastPicks.length;
     if (!n) {
-      foot.innerHTML = `<div class="result-total"><strong>Empty bundle</strong><br><span class="muted">Add at least one product to continue.</span></div>
-        <div class="result-actions"><button class="btn btn-primary" disabled>Add bundle to cart →</button></div>`;
+      foot.innerHTML = `<div class="result-total"><strong>Empty stack</strong><br><span class="muted">Add at least one product to continue.</span></div>
+        <div class="result-actions"><button class="btn btn-primary" disabled>Add stack to cart →</button></div>`;
       return;
     }
     const q = quote(lastPicks, lastDoses, lastPlan), ship = shipFor(q);
@@ -1045,9 +1094,29 @@
         <p class="bd-foot">${q.savedPct ? `You save ${money2(q.full - q.perMonth)} a month (${q.savedPct}%) compared with paying full price.` : ""}</p>
       </div>
       <div class="result-actions plan-actions">
-        <button class="btn btn-primary btn-lg" data-add-picks="1">Add bundle to cart · ${money2(q.today + ship * q.plan.months)} →</button>
+        <button class="btn btn-primary btn-lg" data-add-picks="1">Add stack to cart · ${money2(q.today + ship * q.plan.months)} →</button>
       </div>`;
   }
+
+  $("#quizResult").addEventListener("submit", e => {
+    if (e.target.id !== "gateForm") return;
+    e.preventDefault();
+    const email = $("#gateEmail").value.trim();
+    if (!EMAIL_RE.test(email)) { $(".gate-error").textContent = "Please enter a valid email address."; $("#gateEmail").focus(); return; }
+    gateEmail = email;
+    const a = currentAnswers(), picks = recommend(a);
+    const stack = picks.map(x => `${P[x.id].name} ${DOSES[x.id].levels[recDose(x.id, a)][0]}`).join(", ");
+    const survey = JSON.stringify({ goals: a.goals, age: a.age, training: a.training, activity: a.activity, energy: a.energy, sleep: a.sleep, stress: a.stress, diet: a.diet });
+    // Save the lead in the background; never block the result on it
+    postForm("survey", { name: firstName(), email, stack, survey }).catch(err => { if (window.console) console.warn("Survey lead not saved:", err); });
+    showResult();
+  });
+  $("#quizResult").addEventListener("input", e => { if (e.target.id === "gateEmail") $(".gate-error").textContent = ""; });
+  $("#quizResult").addEventListener("click", e => {
+    if (!e.target.closest("[data-gate-back]")) return;
+    form.hidden = false; $("#quizResult").hidden = true;
+    $("#quizBar").style.width = `${(step / QUESTIONS.length) * 100}%`;
+  });
 
   $("#quizResult").addEventListener("click", e => {
     const b = e.target.closest("[data-dose]");
@@ -1079,7 +1148,7 @@
     const b = e.target.closest("[data-add-picks]");
     if (b && !b.disabled && lastPicks.length) {
       addToCart("bundle", "personal", { sub: lastPlan !== "once", plan: lastPlan, items: [...lastPicks], doses: Object.fromEntries(lastPicks.map(i => [i, lastDoses[i]])), silent: true });
-      toast(`Your ${lastPicks.length}-product bundle is in your cart`);
+      toast(`Your ${lastPicks.length}-product stack is in your cart`);
       openCart();
     }
   });
@@ -1090,7 +1159,7 @@
     const q = quote(ex.map(e => e[0]), Object.fromEntries(ex.map(e => [e[0], e[1]])), "monthly");
     $("#heroVisual").innerHTML = `<div class="hd-card">
       <p class="hd-eyebrow">Example survey result</p>
-      <h3 class="hd-title">Alex's bundle</h3>
+      <h3 class="hd-title">Alex's stack</h3>
       <p class="hd-tags"><span>Age 25–29</span><span>Lifts 3–4×/week</span><span>Rough sleep</span></p>
       <ul class="hd-list">${ex.map(([id, d, why]) => `<li><span class="hd-num">${P[id].num}</span><span class="hd-name">${esc(P[id].name)}</span><span class="hd-dose">${esc(shortDose(DOSES[id].levels[d][0]))} · ${esc(DOSES[id].levels[d][1])}</span><span class="hd-why">${why}</span></li>`).join("")}</ul>
       <div class="hd-foot"><span><strong>${money2(q.perMonth)}</strong>/mo on monthly</span><span>Built from 10 answers</span></div>
