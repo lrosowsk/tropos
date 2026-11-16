@@ -333,7 +333,7 @@
   function postForm(name, fields) {
     const body = new URLSearchParams({ "form-name": name, "bot-field": "", ...fields }).toString();
     return fetch("/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body })
-      .then(r => { if (!r.ok) throw new Error(String(r.status)); });
+      .then(r => { if (!r.ok) { const e = new Error(`HTTP ${r.status}`); e.status = r.status; throw e; } });
   }
   function orderSummary() {
     return cart.map(l => {
@@ -504,7 +504,12 @@
     btn.disabled = true; btn.textContent = "Reserving…"; err.textContent = "";
     postForm("waitlist", { name, email, order: orderSummary(), price_at_launch: money2(total), survey })
       .then(() => { reserveName = name; reserveView = "done"; cart = []; save(); renderCart(); })
-      .catch(() => { btn.disabled = false; btn.textContent = "Reserve my order"; err.textContent = "That didn't go through. Check your connection and try again."; });
+      .catch(e => {
+        btn.disabled = false; btn.textContent = "Reserve my order";
+        const code = e && e.status ? ` (error ${e.status})` : " (no response)";
+        err.textContent = `That didn't go through${code}. Please try again in a moment.`;
+        if (window.console) console.warn("Reservation failed:", e);
+      });
   });
 
   /* Drawer open/close */
