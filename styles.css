@@ -686,3 +686,47 @@ a.how-step p { color: #bdbdbb; }
 .dose { align-items: flex-start; }
 .dose-label { padding-top: 7px; }
 .bundle-items .dose-pick { grid-area: dose; margin-top: 2px; }
+
+/* ---------- Logo ---------- */
+.logo { gap: 9px; color: var(--ink); }
+.logo-mark { width: 24px; height: 24px; background: none; border-radius: 0; color: var(--ink); flex: none; }
+.logo-mark::after { content: none; }
+.logo-word { font-family: var(--sans); font-weight: 600; font-size: 21px; letter-spacing: -.035em; line-height: 1; }
+
+/* ---------- Product tiles (no packaging shown) ---------- */
+.ptile {
+  container-type: inline-size; aspect-ratio: 4 / 5; box-sizing: border-box;
+  border-radius: 12px; background: var(--surface); border: 1px solid var(--line);
+  color: var(--ink); text-align: left; overflow: hidden;
+}
+.pt-in { height: 100%; box-sizing: border-box; padding: 9cqw; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; }
+.pt-num { font-size: 9cqw; letter-spacing: .12em; color: var(--muted); font-weight: 600; }
+.pt-name { font-family: var(--serif); font-size: 13.5cqw; line-height: 1.05; letter-spacing: -.02em; }
+.pt-dose { font-size: 7.5cqw; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.card-media .ptile { position: absolute; top: 12%; bottom: 12%; left: 50%; transform: translateX(-50%); height: 76%; width: auto; transition: transform .35s; }
+.card:hover .card-media .ptile { transform: translate(-50%, -4px); }
+.line-media .ptile { width: 46px; border-radius: 6px; }
+.result-item .mini .ptile, .add-card .mini .ptile { width: 100%; border-radius: 8px; border: 0; }
+.stack-bottles { align-items: center; gap: 8px; }
+.stack-bottles .ptile { height: 96px; width: auto; flex: none; background: rgba(250,250,250,.06); border-color: rgba(250,250,250,.16); color: #f2f2f0; }
+.stack-bottles .ptile .pt-num, .stack-bottles .ptile .pt-dose { color: #a8a8a6; }
+.pd-media .ptile { width: 62%; max-width: 280px; height: auto; }
+@media (max-width: 800px) { .pd-media .ptile { width: 40%; } }
+
+/* ---------- Hero: example survey result ---------- */
+.hero-visual { padding: 44px 16px; }
+.hd-card { max-width: 560px; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 26px 28px 22px; box-shadow: var(--shadow); text-align: left; animation: rise .9s cubic-bezier(.2,.7,.2,1) both; }
+.hd-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.hd-title { font-family: var(--serif); font-weight: 400; font-size: 30px; letter-spacing: -.02em; margin: 6px 0 10px; }
+.hd-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.hd-tags span { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); }
+.hd-list { list-style: none; padding: 0; margin: 18px 0 0; border-top: 1px solid var(--line); }
+.hd-list li { display: grid; grid-template-columns: 28px 1fr auto; grid-template-areas: "num name why" "num dose why"; column-gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); align-items: center; }
+.hd-num { grid-area: num; font-size: 11px; font-weight: 600; letter-spacing: .1em; color: var(--muted); }
+.hd-name { grid-area: name; font-weight: 600; font-size: 15px; }
+.hd-dose { grid-area: dose; font-size: 12.5px; color: var(--ink-2); }
+.hd-why { grid-area: why; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); }
+.hd-foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; font-size: 13px; color: var(--muted); }
+.hd-foot strong { font-family: var(--serif); font-weight: 400; font-size: 22px; color: var(--ink); letter-spacing: -.02em; }
+@media (max-width: 520px) { .hd-card { padding: 20px 18px 16px; } .hd-why { display: none; } .hd-list li { grid-template-columns: 24px 1fr; grid-template-areas: "num name" "num dose"; } }
+.card-num { display: none; }

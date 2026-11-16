@@ -250,6 +250,9 @@
       pitch: "Decide once and stop thinking about it. A full year of consistency at your lowest price, locked in." },
   ];
   const MAX_OFF = Math.round(Math.max(...PLANS.map(p => p.off)) * 100);
+  const SHIP_FEE = 6.95, FREE_SHIP_MIN = 100;   // free shipping only on subscriptions of $100+/month
+  // shipping per delivery for a quote (bundle on the result screen, a product on its page)
+  const shipFor = q => (q.plan.id !== "once" && q.perMonth >= FREE_SHIP_MIN ? 0 : SHIP_FEE);
   const PERK = "Free weekly pill organizer with your 2nd delivery";
   const PLAN = Object.fromEntries(PLANS.map(p => [p.id, p]));
   const SUB_PLANS = PLANS.filter(p => p.id !== "once");      // shown as cards; one-time is a quiet link
@@ -273,9 +276,10 @@
     toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
   }
 
-  /* Product imagery: studio renders in img/ (swap for real photography 1:1) */
+  /* Product tiles stand in for packaging until real product photos exist */
+  // Typographic product tile (no packaging shown until real product photos exist)
   function art(p) {
-    return `<img src="img/${p.id}.webp" alt="Tropos ${esc(p.name)}, ${esc(p.kind)}" width="800" height="1000" loading="lazy" decoding="async">`;
+    return `<div class="ptile" role="img" aria-label="${esc(p.name)}, ${esc(p.kind)}"><div class="pt-in"><span class="pt-num">${p.num}</span><span class="pt-name">${esc(p.name)}</span><span class="pt-dose">${esc(p.lbl)}</span></div></div>`;
   }
 
   function factsPanel(p) {
@@ -346,14 +350,29 @@
     }).join(" | ");
   }
 
+  // Order-level totals: shipping is free only when subscriptions add up to $100+ a month
+  function cartTotals() {
+    let full = 0, now = 0, anySub = false, subMonthly = 0, maxMonths = 1;
+    cart.forEach(l => {
+      const pr = linePricing(l); full += pr.full; now += pr.now;
+      if (planOf(l) !== "once") { anySub = true; subMonthly += pr.q.perMonth * l.qty; }
+      maxMonths = Math.max(maxMonths, pr.q.plan.months);
+    });
+    const shipPer = cart.length && subMonthly < FREE_SHIP_MIN ? SHIP_FEE : 0;
+    const shipToday = shipPer * maxMonths;
+    return { full, now, anySub, subMonthly, maxMonths, shipPer, shipToday, total: now + shipToday };
+  }
+
   function renderCart() {
     const count = cart.reduce((n, l) => n + l.qty, 0);
     $("#cartCount").textContent = count;
 
-    let full = 0, now = 0, anySub = false;
-    cart.forEach(l => { const pr = linePricing(l); full += pr.full; now += pr.now; if (planOf(l) !== "once") anySub = true; });
-
-    $("#shipMeter").innerHTML = `<strong>Free shipping</strong> on every order, always.`;
+    const T = cartTotals(), { full, now, anySub } = T;
+    const meter = $("#shipMeter");
+    if (!cart.length) meter.innerHTML = `Free shipping on subscriptions of ${money(FREE_SHIP_MIN)}+ a month.`;
+    else if (!T.shipPer) meter.innerHTML = `<strong>You've unlocked free shipping.</strong><div class="bar"><div style="width:100%"></div></div>`;
+    else if (anySub) meter.innerHTML = `Add <strong>${money2(FREE_SHIP_MIN - T.subMonthly)}/mo</strong> to your subscription for free shipping.<div class="bar"><div style="width:${Math.min(100, T.subMonthly / FREE_SHIP_MIN * 100)}%"></div></div>`;
+    else meter.innerHTML = `Shipping is ${money2(SHIP_FEE)} on one-time orders. Subscribe to ${money(FREE_SHIP_MIN)}+ a month for free shipping.`;
 
     const body = $("#cartItems");
     if (!cart.length && reserveView !== "done") reserveView = null;
@@ -409,8 +428,8 @@
     const summary = `
       <div class="sum-row"><span>Full price</span><span>${money2(full)}</span></div>
       ${full > now ? `<div class="sum-row save"><span>Subscription &amp; prepay savings</span><span>−${money2(full - now)}</span></div>` : ""}
-      <div class="sum-row"><span>Shipping</span><span>Free</span></div>
-      <div class="sum-row total"><span>Your price at launch</span><span>${money2(now)}</span></div>`;
+      <div class="sum-row"><span>Shipping${T.shipPer && T.maxMonths > 1 ? ` (${T.maxMonths} deliveries)` : ""}</span><span>${T.shipPer ? money2(T.shipToday) : "Free"}</span></div>
+      <div class="sum-row total"><span>Your price at launch</span><span>${money2(T.total)}</span></div>`;
     if (reserveView === "done") {
       $("#cartFoot").innerHTML = `<div class="reserve-done"><h4>You're on the list${reserveName ? `, ${esc(reserveName)}` : ""}.</h4>
         <p>Your order is reserved at the price above. We'll email you before anything ships, and you won't be charged until you confirm.</p>
@@ -487,7 +506,7 @@
     const f = e.target, err = $(".reserve-error", f), btn = $("button[type=submit]", f);
     const name = $("[name=name]", f).value.trim(), email = $("[name=email]", f).value.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = "Please enter a valid email address."; $("[name=email]", f).focus(); return; }
-    let total = 0; cart.forEach(l => { total += linePricing(l).now; });
+    const total = cartTotals().total;
     const a = lastAnswers || {};
     const survey = lastAnswers ? JSON.stringify({ goals: a.goals, age: a.age, training: a.training, activity: a.activity, diet: a.diet }) : "";
     btn.disabled = true; btn.textContent = "Reserving…"; err.textContent = "";
@@ -600,7 +619,7 @@
               return `<button class="buy-opt ${on ? "on" : ""}" data-buy="${pl.id}" role="radio" aria-checked="${on}"><span><strong>${pl.name}${pl.off ? ` · save ${Math.round(pl.off * 100)}%` : ""}</strong><small>${pl.months > 1 ? `${money2(q.today)} today · ` : ""}${esc(pl.note)}</small></span><span class="p">${pl.off ? `<s>${money(p.price)}</s>` : ""}${money2(q.perMonth)}${pl.id === "once" ? "" : "/mo"}</span></button>`; }).join("")}
             <button class="once-opt ${modalMode === "once" ? "on" : ""}" data-buy="once" role="radio" aria-checked="${modalMode === "once"}">Or buy once at full price, ${money2(p.price)}</button>
           </div>
-          <p class="perk-note">+ Subscribe on any plan and get a free weekly pill organizer with your 2nd delivery.</p>
+          <p class="perk-note">+ Subscribe on any plan and get a free weekly pill organizer with your 2nd delivery. Shipping is ${money2(SHIP_FEE)}, free on subscriptions of ${money(FREE_SHIP_MIN)}+ a month.</p>
           <button class="btn btn-primary btn-block" id="modalAdd">Add to cart</button>
           <div class="pd-tabs">
             <details open><summary>Supplement facts</summary><div class="tab-body">${factsPanel(p)}</div></details>
@@ -991,7 +1010,7 @@
         <div class="result-actions"><button class="btn btn-primary" disabled>Add bundle to cart →</button></div>`;
       return;
     }
-    const q = quote(lastPicks, lastDoses, lastPlan);
+    const q = quote(lastPicks, lastDoses, lastPlan), ship = shipFor(q);
     foot.innerHTML = `
       <div class="plans">
         <h4>Choose your plan</h4>
@@ -1005,6 +1024,7 @@
               <span class="plan-today">${p.months > 1 ? `${money2(pq.today)} today` : p.id === "once" ? "1-month supply" : "Billed monthly"}</span>
               <span class="plan-save">${pq.savedPct ? `Save ${pq.savedPct}%` : "Full price"}</span>
               ${p.id !== "once" ? `<span class="plan-perk">+ Free organizer</span>` : ""}
+              <span class="plan-perk">${shipFor(pq) ? `+ ${money2(SHIP_FEE)} shipping` : "Free shipping"}</span>
             </button>`;
           }).join("")}
         </div>
@@ -1031,11 +1051,13 @@
         ${q.planDisc ? `<div class="bd-row save"><span>${q.plan.id === "monthly" ? "Monthly subscription" : q.plan.name} (${Math.round(q.plan.off * 100)}% off)</span><span>−${money2(q.planDisc)}</span></div>` : `<div class="bd-row muted"><span>Subscribe to save 15%, or prepay to save up to ${MAX_OFF}%</span><span></span></div>`}
         ${q.plan.id !== "once" ? `<div class="bd-row save"><span>Weekly pill organizer, with your 2nd delivery</span><span>Free</span></div>` : ""}
         <div class="bd-row strong"><span>Your price per month</span><span>${money2(q.perMonth)}</span></div>
-        <div class="bd-row total"><span>Due today${q.plan.months > 1 ? ` (${q.plan.months} months)` : ""}</span><span>${money2(q.today)}</span></div>
+        <div class="bd-row"><span>Shipping${ship ? (q.plan.months > 1 ? ` (${money2(ship)} × ${q.plan.months} deliveries)` : "") : ""}</span><span>${ship ? money2(ship * q.plan.months) : "Free"}</span></div>
+        ${ship && q.plan.id !== "once" ? `<div class="bd-row muted"><span>Add ${money2(FREE_SHIP_MIN - q.perMonth)}/mo for free shipping</span><span></span></div>` : ""}
+        <div class="bd-row total"><span>Due today${q.plan.months > 1 ? ` (${q.plan.months} months)` : ""}</span><span>${money2(q.today + ship * q.plan.months)}</span></div>
         <p class="bd-foot">${q.savedPct ? `You save ${money2(q.full - q.perMonth)} a month (${q.savedPct}%) compared with paying full price.` : ""}</p>
       </div>
       <div class="result-actions plan-actions">
-        <button class="btn btn-primary btn-lg" data-add-picks="1">Add bundle to cart · ${money2(q.today)} →</button>
+        <button class="btn btn-primary btn-lg" data-add-picks="1">Add bundle to cart · ${money2(q.today + ship * q.plan.months)} →</button>
       </div>`;
   }
 
@@ -1075,7 +1097,17 @@
   });
 
   /* ───────────────────────── Misc ───────────────────────── */
-  $("#heroVisual").innerHTML = `<img src="img/group.webp" alt="The Tropos range: Creatine, Focus, Foundation, Magnesium and Protein" width="1985" height="592">`;
+  (() => {
+    const ex = [["creatine", 1, "Strength"], ["magnesium", 2, "Sleep"], ["rest", 1, "Sleep"], ["foundation", 1, "Daily essentials"]];
+    const q = quote(ex.map(e => e[0]), Object.fromEntries(ex.map(e => [e[0], e[1]])), "monthly");
+    $("#heroVisual").innerHTML = `<div class="hd-card">
+      <p class="hd-eyebrow">Example survey result</p>
+      <h3 class="hd-title">Alex's bundle</h3>
+      <p class="hd-tags"><span>Age 25–29</span><span>Lifts 3–4×/week</span><span>Rough sleep</span></p>
+      <ul class="hd-list">${ex.map(([id, d, why]) => `<li><span class="hd-num">${P[id].num}</span><span class="hd-name">${esc(P[id].name)}</span><span class="hd-dose">${esc(shortDose(DOSES[id].levels[d][0]))} · ${esc(DOSES[id].levels[d][1])}</span><span class="hd-why">${why}</span></li>`).join("")}</ul>
+      <div class="hd-foot"><span><strong>${money2(q.perMonth)}</strong>/mo on monthly</span><span>Built from 10 answers</span></div>
+    </div>`;
+  })();
   $("#labelDemo").innerHTML = factsPanel(P.foundation);
 
   const burger = $("#burger"), links = $("#navLinks");
