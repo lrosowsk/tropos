@@ -276,12 +276,6 @@
     toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
   }
 
-  /* Product tiles stand in for packaging until real product photos exist */
-  // Typographic product tile (no packaging shown until real product photos exist)
-  function art(p) {
-    return `<div class="ptile" role="img" aria-label="${esc(p.name)}, ${esc(p.kind)}"><div class="pt-in"><span class="pt-num">${p.num}</span><span class="pt-name">${esc(p.name)}</span><span class="pt-dose">${esc(p.lbl)}</span></div></div>`;
-  }
-
   function factsPanel(p) {
     const rows = p.facts.map(([n, a, dv]) => {
       const indent = n.startsWith("  ");
@@ -397,10 +391,8 @@
         : `${l.items.length} product${l.items.length > 1 ? "s" : ""}`;
       const bundleEdit = isP ? "" : `<ul class="bundle-items">${l.items.map(i => `<li><span>${esc(P[i].name)}</span>${doseSeg(i, doseIdx(i, (l.doses || {})[i]), recDose(i, lastAnswers), `data-act="bundle-dose" data-id="${i}"`)}<span class="bi-price">${money2(P[i].price * doseMult(i, (l.doses || {})[i]))}</span><button data-act="bundle-remove" data-id="${i}" aria-label="Remove ${esc(P[i].name)} from bundle">✕</button></li>`).join("")}</ul>
           ${others.length ? `<label class="bundle-add">+ <select data-act="bundle-add" aria-label="Add a product to your bundle"><option value="">Add a product to your bundle</option>${others.map(p => `<option value="${p.id}">${esc(p.name)} · ${esc(p.kind)} · ${money(p.price)}</option>`).join("")}</select></label>` : ""}`;
-      const media = isP ? art(item) : art(P[item.items[0]]);
       const lineIds = isP ? [l.id] : l.items, lineDoses = isP ? {} : (l.doses || {});
       return `<div class="line" data-key="${l.key}">
-        <div class="line-media">${media}</div>
         <div>
           <div class="line-top">
             <div><h4>${esc(item.name)}</h4><div class="line-sub">${sub}</div></div>
@@ -530,14 +522,9 @@
 
     $("#productGrid").innerHTML = PRODUCTS.map(p => `
       <article class="card" data-goals="${p.goals.join(" ")}">
-        <div class="card-media" style="background:${p.color}" data-open="${p.id}" role="button" tabindex="0" aria-label="View ${esc(p.name)} details">
-          <span class="card-num">${p.num}</span>
-          ${p.tag ? `<span class="card-tag">${p.tag}</span>` : ""}
-          ${art(p)}
-        </div>
         <div class="card-body">
           <div class="card-top">
-            <h3>${esc(p.name)}</h3>
+            <h3><button class="card-name" data-open="${p.id}">${esc(p.name)}</button></h3>
             <div class="card-price">${money(p.price)}<small>from ${money2(p.price * (1 - MAX_OFF / 100))}/mo prepaid</small></div>
           </div>
           <p class="card-purpose">${esc(p.kind)}</p>
@@ -566,7 +553,6 @@
     if (open) openModal(open.dataset.open);
   });
   document.addEventListener("keydown", e => {
-    if ((e.key === "Enter" || e.key === " ") && e.target.matches(".card-media")) { e.preventDefault(); openModal(e.target.dataset.open); }
     if (e.key === "Escape") { closeModal(); closeCart(); }
   });
 
@@ -582,7 +568,6 @@
           <p class="stack-tags">${ex.tags.map(t => `<span>${esc(t)}</span>`).join("")}</p></div>
           <span class="save-pill">${items.length} products</span>
         </div>
-        <div class="stack-bottles">${items.map(id => art(P[id])).join("")}</div>
         <ul class="stack-items">${items.map(id => `<li><span>${P[id].name} · ${esc(P[id].kind)}</span><span>${money(P[id].price)}</span></li>`).join("")}</ul>
         <div class="stack-foot">
           <div class="stack-price"><strong>${money2(sub)}</strong><s>${money(base)}</s><small>per month on a monthly subscription</small></div>
@@ -606,11 +591,11 @@
     panel.innerHTML = `
       <button class="icon-btn modal-close" data-close-modal aria-label="Close">✕</button>
       <div class="pd">
-        <div class="pd-media" style="background:${p.color}">${art(p)}<div class="pd-badges">${p.free.map(f => `<span>${esc(f)}</span>`).join("")}<span>3rd-party tested</span></div></div>
         <div class="pd-info">
           <p class="eyebrow">${p.num} · ${esc(p.kind)}</p>
           <h2 id="modalTitle">${esc(p.name)}</h2>
           <p class="pd-purpose">${esc(p.purpose)}</p>
+          <div class="pd-badges">${p.free.map(f => `<span>${esc(f)}</span>`).join("")}</div>
           <ul class="pd-benefits">${p.benefits.map(b => `<li>${esc(b)}</li>`).join("")}</ul>
           <div class="buy-opts" role="radiogroup" aria-label="Purchase option">
             ${bundle && !inBundle ? `<button class="buy-opt on" data-buy="bundle" role="radio" aria-checked="true"><span><strong>Add to my bundle</strong><small>Joins your bundle on its ${esc(bq.plan.name.toLowerCase())} plan</small></span><span class="p">${bq.planDisc ? `<s>${money(p.price)}</s>` : ""}${money2(bq.perMonth)}${bq.plan.id === "once" ? "" : "/mo"}</span></button>` : ""}
@@ -949,7 +934,6 @@
           const p = P[x.id];
           const r3 = x.why.slice(0, 3); const why = r3.length > 1 ? r3.slice(0, -1).join(", ") + ", and " + r3[r3.length - 1] : r3[0];
           return `<div class="result-item" data-item="${p.id}">
-            <div class="mini">${art(p)}</div>
             <div>
               <span class="match">${x.match}% match</span>
               <h4>${esc(p.name)}<span>${esc(p.kind)}</span></h4>
@@ -970,7 +954,6 @@
           ${PRODUCTS.filter(p => !lastPicks.includes(p.id)).map(p => {
             const warn = fitWarning(p.id, answers);
             return `<div class="add-card" data-item="${p.id}">
-              <div class="mini">${art(p)}</div>
               <div class="add-info"><strong>${esc(p.name)}</strong><span>${esc(p.kind)} · ${esc(doseText(p.id, lastDoses[p.id]))}</span>${warn ? `<em>${esc(warn)}</em>` : ""}</div>
               <div class="result-side"><div class="result-price">${money2(p.price * doseMult(p.id, lastDoses[p.id]))}</div>
                 <button class="pick-toggle" data-toggle-item="${p.id}" aria-pressed="false">+ Add</button></div>

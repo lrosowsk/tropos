@@ -730,3 +730,17 @@ a.how-step p { color: #bdbdbb; }
 .hd-foot strong { font-family: var(--serif); font-weight: 400; font-size: 22px; color: var(--ink); letter-spacing: -.02em; }
 @media (max-width: 520px) { .hd-card { padding: 20px 18px 16px; } .hd-why { display: none; } .hd-list li { grid-template-columns: 24px 1fr; grid-template-areas: "num name" "num dose"; } }
 .card-num { display: none; }
+
+/* ---------- No product imagery ---------- */
+.card-name { font: inherit; color: inherit; text-align: left; padding: 0; }
+.card-name:hover { text-decoration: underline; text-underline-offset: 4px; }
+.card-body { padding-top: 26px; }
+.line { grid-template-columns: 1fr; }
+.result-item { grid-template-columns: 1fr auto; }
+.add-card { grid-template-columns: 1fr auto; }
+@media (max-width: 700px) { .result-item { grid-template-columns: 1fr; } .result-side { grid-column: 1; } }
+.pd { grid-template-columns: 1fr; }
+.pd-info { max-width: 640px; margin: 0 auto; width: 100%; }
+.modal-panel { width: min(720px, 100%); }
+.pd-badges { position: static; display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-start; margin-top: 14px; }
+.pd-badges span { background: var(--surface-2); }
