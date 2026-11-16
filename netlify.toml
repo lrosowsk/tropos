@@ -1,0 +1,10 @@
+# Deploys the Tropos storefront (static, no build step).
+[build]
+  publish = "."
+
+# Keep the render tooling out of the public site.
+[[redirects]]
+  from = "/tools/*"
+  to = "/404"
+  status = 404
+  force = true
