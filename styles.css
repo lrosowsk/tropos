@@ -775,3 +775,11 @@ a.how-step p { color: #bdbdbb; }
 .why-sub-foot { font-size: 13.5px; color: var(--ink-2); margin-top: 14px; }
 .why-sub-foot strong { color: var(--ink); }
 @media (max-width: 640px) { .vs { grid-template-columns: 1fr; } }
+
+/* Value grid (replaces the comparison) */
+.vals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.val { padding: 14px 16px; border-radius: 12px; background: var(--surface-2); display: grid; gap: 4px; }
+.val strong { font-size: 14px; font-weight: 600; }
+.val span { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+@media (max-width: 760px) { .vals { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 460px) { .vals { grid-template-columns: 1fr; } }

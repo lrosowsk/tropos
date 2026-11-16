@@ -960,28 +960,16 @@
         <button class="q-back" data-restart>↺ Retake survey</button>
       </div>
       <div class="why-sub">
-        <h4>Why get your stack from Tropos</h4>
-        <div class="vs">
-          <div class="vs-col">
-            <p class="vs-title">Piecing it together yourself</p>
-            <ul>
-              <li>${picks.length} products from different brands and checkouts</li>
-              <li>Standard serving sizes, not doses matched to you</li>
-              <li>Bottles run out at different times, so you skip days</li>
-              <li>Full price, every reorder</li>
-            </ul>
-          </div>
-          <div class="vs-col vs-us">
-            <p class="vs-title">Your Tropos stack</p>
-            <ul>
-              <li>Everything in one box, every month</li>
-              <li>Your exact doses, set from your answers</li>
-              <li>Refills arrive together, before you run out</li>
-              <li>Up to ${MAX_OFF}% off, a free pill organizer, free shipping over ${money(FREE_SHIP_MIN)}/mo</li>
-            </ul>
-          </div>
+        <h4>Why your stack is easier with Tropos</h4>
+        <div class="vals">
+          <div class="val"><strong>No store runs</strong><span>Your stack arrives at your door every month. No aisles, no reordering.</span></div>
+          <div class="val"><strong>Everything in one box</strong><span>All ${picks.length} products, together, on one simple plan.</span></div>
+          <div class="val"><strong>Dosed for you</strong><span>Every starting dose is set from your answers.</span></div>
+          <div class="val"><strong>Never run out</strong><span>Refills arrive before you need them, so you don't miss days.</span></div>
+          <div class="val"><strong>Changes with you</strong><span>Adjust doses, swap products or re-take the survey any time.</span></div>
+          <div class="val"><strong>Rewards for sticking with it</strong><span>Up to ${MAX_OFF}% off, a free pill organizer, free shipping over ${money(FREE_SHIP_MIN)}/mo.</span></div>
         </div>
-        <p class="why-sub-foot"><strong>Consistency is what makes supplements work.</strong> Most are studied over 8–12 weeks of daily use. A subscription makes every one of those days automatic, and you can change doses, swap products or re-take the survey whenever your goals change.</p>
+        <p class="why-sub-foot"><strong>Consistency is what makes supplements work.</strong> Most are studied over 8–12 weeks of daily use. A subscription makes every one of those days automatic.</p>
       </div>
       <div class="result-list">
         ${picks.map(x => {
