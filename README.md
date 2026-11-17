@@ -1,5 +1,7 @@
 # Tropos: men's supplement storefront
 
+> Also in this repo: `hyrox/`, a standalone Hyrox training app (served at `/hyrox/`). See `hyrox/README.md`.
+
 Static site with no build step. Open `index.html` in a browser, or serve the folder:
 
 ```

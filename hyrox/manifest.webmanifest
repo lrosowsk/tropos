@@ -1,0 +1,13 @@
+{
+  "name": "Hyrox Prep",
+  "short_name": "Hyrox Prep",
+  "description": "Plan, log and track Hyrox training, lifting and nutrition.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#121211",
+  "theme_color": "#121211",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
